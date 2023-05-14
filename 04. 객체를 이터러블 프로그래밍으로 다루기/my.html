@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>04/1</title>
+    <script src="../fx.js"></script>
+  </head>
+  <body>
+    ## 객체를 이터러블 프로그래밍으로 다루기
+
+    <script>
+      const obj1 = {
+        a: 1,
+        b: 2,
+        c: 3,
+        d: 4,
+      };
+    </script>
+
+    <br /><br />
+    1. values
+    <script>
+      // ⭐️ obj의 값을 모두 평가해서 반환하는것이아니라, 지연평가하면서 값을 하나씩 반환
+      L.values = function* (obj) {
+        for (const k in obj) {
+          yield obj[k];
+        }
+      };
+
+      _.go(
+        obj1,
+        L.values,
+        L.take(2),
+        _.reduce((a, b) => a + b),
+        console.log
+      );
+    </script>
+
+    <br /><br />
+    2. entries
+    <script>
+      // 값을 하나하나 뽑아내서 이터러블 프로그래밍을 할 수 있음
+      L.entries = function* (obj) {
+        for (const k in obj) {
+          yield [k, obj[k]];
+        }
+      };
+
+      _.go(
+        obj1,
+        L.entries,
+        L.filter(([_, v]) => v % 2),
+        L.map(([k, v]) => ({ [k]: v })),
+        _.each(console.log)
+      );
+      console.clear();
+    </script>
+
+    <br /><br />
+    3. keys
+    <script>
+      L.keys = function* (obj) {
+        for (const k in obj) {
+          yield k;
+        }
+      };
+
+      _.go(obj1, L.keys, _.each(console.log));
+    </script>
+
+    4. 어떠한 값이든 이터러블 프로그래밍으로 다루기 - 이터러블로 이터러블
+    프로그래밍 - 객체를 제너레이터를 이용해서 이터레이터로 만들어서 이터러블
+    <br /><br />
+    프로그래밍 - 어떤 제너레이터든 이터레이터로 만들어서 이터러블 프로그래밍
+
+    <script></script>
+
+    <br /><br />
+    5. object
+
+    <script></script>
+
+    <br /><br />
+    6. mapObject
+
+    <script></script>
+
+    <br /><br />
+    7. pick
+
+    <script></script>
+
+    <br /><br />
+    8. indexBy
+
+    <script></script>
+
+    <br /><br />
+    9. indexBy 된 값을 filter 하기
+
+    <script></script>
+  </body>
+</html>
