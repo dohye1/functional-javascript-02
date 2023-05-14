@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>03/1</title>
+    <script src="../fx.js"></script>
+  </head>
+  <body>
+    ## 안전한 합성에 대해 <br />
+    1. map으로 합성하기
+    <script>
+      const f = (x) => x + 10;
+      const g = (x) => x - 5;
+
+      const fg = (x) => f(g(x));
+
+      // fg함수에 인자를 넘기지않으면 NaN가 반환됨. 이럴땐 어떻게 처리할가에 대한 내용
+      _.go(10, fg, console.log);
+
+      // 모나드 형태의 합성??? : 이건 이전강의를 들어야할듯
+      // [10]을 넘겨주면 15를 출력, []을 넘겨주면 아무일도 일어나지않게함
+      // 🤔 추측 : lazy 메서드를 실행하면 한 루프를 돌때마다 하나의 값에 대해 명령을 실행하는데, 빈 배열을 넘길때는 아예 루프실행 대상이없어서 위와같은 결과가 나오는것같음
+      _.go([10], L.map(fg), _.each(console.log));
+    </script>
+    <br />
+    <br />
+    2. find 대신 L.filter 써보기
+    <script>
+      const users = [
+        { name: "AA", age: 35 },
+        // { name: "BB", age: 26 },
+        { name: "CC", age: 28 },
+        { name: "CC", age: 34 },
+        { name: "EE", age: 23 },
+      ];
+
+      const user = _.find((u) => u.name === "BB", users);
+      console.log(user);
+
+      // 만약 찾을수없는 대상을 찾는다면? undefined 출력
+      if (user) {
+        console.log(user);
+      }
+      console.clear();
+
+      // 코드 개선하기
+      _.each(
+        console.log,
+        L.take(
+          1,
+          L.filter((u) => u.name === "BB", users)
+        )
+      );
+
+      // go로 변경해보기
+      // 좀 더 안전하게 대상을 찾고, 대상의 값을 활요할 수 있음
+      _.go(
+        users,
+        L.filter((u) => u.name === "BB"),
+        L.take(1),
+        L.map((u) => u.age),
+        _.each(console.log)
+      );
+
+      // find함수는 인자로 받는 배열을 평가를 완료한 뒤, 계산을 하게된다. 그래서 에러나 예외처리를 해줘야함
+      // ⭐️L.filter는 지연평가를하기때문에 find와 동일한 시간복잡도를 가지면서 find처럼 에러나 예외처리를 해줄필요없이 처리가 가능하다.⭐️
+      // 에러에 대한 처리를 다른 시각으로 바라볼수있다!!!!! 헐랭 이거 완전좋네
+    </script>
+  </body>
+</html>
