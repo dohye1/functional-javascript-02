@@ -73,31 +73,178 @@
     <br /><br />
     프로그래밍 - 어떤 제너레이터든 이터레이터로 만들어서 이터러블 프로그래밍
 
-    <script></script>
+    <script>
+      // ✅ 코드의 상황을 값으로 다루면서 프로그래밍이 가능하다!!
+      const g1 = function* (stop) {
+        let i = -1;
+        while (++i < stop) {
+          console.log(i);
+          yield 10;
+          if (false) {
+            yield 20 + 30;
+          }
+          console.log(i);
+          yield 30;
+        }
+      };
+
+      // take는 yield 기준임 > 내가 가져올값의 개수만 신경쓰는거
+      console.log([...L.take(3, g1(10))]);
+      console.clear();
+    </script>
 
     <br /><br />
     5. object
 
-    <script></script>
+    <script>
+      const object = (entries) =>
+        _.reduce((obj, [k, v]) => ((obj[k] = v), obj), {}, entries);
+
+      console.log(object([["a", 1]]));
+    </script>
 
     <br /><br />
     6. mapObject
 
-    <script></script>
+    <script>
+      const mapObject = (_) => _;
+      mapObject((a) => a + 10, { a: 1, b: 2, c: 3 });
+
+      // 예상 결과
+      // {a:11, b:12, c:13}
+
+      // 내가 푼 코드
+      // 객체를 이터러블로 변환해주지않음....ㅜㅠㅜㅠ
+      const hyewonMapObject = (cb, entries) =>
+        _.go(entries, L.map(cb), _.each(console.log));
+
+      hyewonMapObject((a) => a + 10, { a: 1, b: 2, c: 3 });
+
+      // 강의 코드
+      // 이터러블로 먼저 만들겠다 : [['a', 1], ['b', 2], ['c', 3]]; 형태로 먼저 만들어줄것임
+      // 값을 변경해줌 : [['a', 11], ['b', 12], ['c', 13]];
+      // {a:11, b:12, c:13}
+      const solution = (f, obj) =>
+        _.go(
+          obj,
+          L.entries,
+          _.map(([k, v]) => [k, f(v)]),
+          object,
+          console.log
+        );
+      solution((a) => a + 10, { a: 1, b: 2, c: 3 });
+    </script>
 
     <br /><br />
     7. pick
 
-    <script></script>
+    <script>
+      const obj2 = { a: 1, b: 2, c: 3, d: 4, e: 5 };
+      // const pick = (_) => _;
+
+      // console.log(pick(["b", "c"], obj2));
+      // 예상 결과
+      // { b: 2, c: 3}
+
+      // 내가 만든것
+      // filter를 사용해서 pick할 대상을 찾으면 데이터의 수가 많아졌을때 불필요한 순회를 하게됨
+      const hyewonPick = (target, obj) =>
+        _.go(
+          obj,
+          L.entries,
+          L.filter(([k, v]) => target.includes(k)),
+          object
+        );
+
+      console.log(hyewonPick(["b", "c"], obj2));
+
+      // 강의 코드
+      // 🚨 헐....조금 충격... 뒤집어서 생각할수도있네....!!!
+      const pick = (ks, obj) =>
+        _.go(
+          ks,
+          _.map((k) => [k, obj[k]]),
+          object
+        );
+
+      const pick2 = (ks, obj) => object(_.map((k) => [k, obj[k]], ks));
+      console.log(pick(["b", "c"], obj2));
+      // 하지만 ks에 obj가 가지지않는 필드명을 넘겨주는경우 undefined를 밸류로 가지는 필드가 생김
+      // 그래서 아래처럼 필터의 역할을 하는 구문을 추가해줌
+      const pickWithoutUndefined = (ks, obj) =>
+        _.go(
+          ks,
+          _.map((k) => [k, obj[k]]),
+          _.reject(([k, v]) => v === undefined),
+          object
+        );
+      console.log(pickWithoutUndefined(["b", "c", "z"], obj2));
+      console.clear();
+    </script>
 
     <br /><br />
     8. indexBy
 
-    <script></script>
+    <script>
+      const users = [
+        { id: 5, name: "AA", age: 35 },
+        { id: 10, name: "BB", age: 26 },
+        { id: 19, name: "CC", age: 28 },
+        { id: 23, name: "CC", age: 34 },
+        { id: 24, name: "EE", age: 23 },
+      ];
+
+      // console.log(_.indexBy((u) => u.id, users));
+      // 결과값
+      // const a = {
+      //   5: { id: 5, name: "AA", age: 35 },
+      //   10: { id: 10, name: "BB", age: 26 },
+      //   19: { id: 19, name: "CC", age: 28 },
+      //   23: { id: 23, name: "CC", age: 34 },
+      //   24: { id: 24, name: "EE", age: 23 },
+      // };
+
+      // 🚨 헐 이거 대박 indexby를 사용하는 예시를 설명해주셨는데, 진짜 유용하게 쓰일듯!!!
+      // 만약 id가 19인 유저를 찾을때 원래는 보통은 filter를 사용해서 찾는데, indexBy를 사용하면 key로 접근해서 바로 찾을수있다
+      // 특정 타겟을 찾는 행위가 잦은 로직에서는 성능적으로 봤을때도 훨씬 좋음
+
+      const hyewonIndexBy = (f, iter) =>
+        _.go(
+          iter,
+          _.map((item) => ({ [f(item)]: item })),
+          _.reduce(Object.assign)
+          // Object.assign
+        );
+
+      console.log(hyewonIndexBy((u) => u.id, users));
+
+      // 강의 코드
+      const indexBy = (f, iter) =>
+        _.reduce((obj, a) => ((obj[f(a)] = a), obj), {}, iter);
+      console.log(indexBy((u) => u.id, users));
+      console.clear();
+    </script>
 
     <br /><br />
     9. indexBy 된 값을 filter 하기
 
-    <script></script>
+    <script>
+      const users2 = indexBy((u) => u.id, users);
+      // 만약 나이가 30이상인 유저를 찾을땐 아래처럼 filter를 보통 사용함
+      console.log(_.filter((u) => u.age > 30, users));
+      // 하지만 indexBy인 애는 필터가 적용이 안됨
+      console.log(_.filter((u) => u.age > 30, users2));
+
+      // 만약 indexBy된값을 필터해야할떄는?
+      console.log(
+        _.go(
+          users2,
+          L.entries,
+          L.filter(([_, { age }]) => age > 30),
+          L.take(2),
+          object
+        )
+      );
+    </script>
   </body>
 </html>
