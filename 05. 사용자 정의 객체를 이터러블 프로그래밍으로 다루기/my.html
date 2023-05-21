@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>05/1</title>
+    <script src="../fx.js"></script>
+  </head>
+  <body>
+    ## 사용자 정의 객체를 이터러블 프로그래밍으로 다루기
+    <br /><br />
+    1. Map, Set
+
+    <script>
+      let m = new Map();
+      m.set("a", 1);
+      m.set("b", 2);
+      m.set("c", 3);
+
+      console.log([...m.entries()]);
+      console.log(m.keys());
+      console.log(m.values());
+
+      _.go(
+        m,
+        L.filter(([k, v]) => v % 2),
+        _.takeAll,
+        (e) => new Map(e),
+        console.log
+      );
+
+      const s = new Set();
+      s.add(10);
+      s.add(20);
+      s.add(30);
+      const add = (a, b) => a + b;
+
+      console.log(_.reduce(add, s));
+      console.clear();
+    </script>
+
+    <br /><br />
+    2. Model, Collection
+
+    <script>
+      // 객체지향프로그래밍 + 이터러블 프로그래밍
+      class Model {
+        constructor(attrs = {}) {
+          this._attrs = attrs;
+        }
+
+        get(k) {
+          return this._attrs[k];
+        }
+
+        set(k, v) {
+          this._attrs[k] = v;
+          return this;
+        }
+      }
+
+      class Collection {
+        constructor(models = []) {
+          this._models = models;
+        }
+
+        at(idx) {
+          return this._models[idx];
+        }
+
+        add(model) {
+          this._models.push(model);
+          return this;
+        }
+
+        // 와우...이렇게도 구현이 가능하군
+        // 1번
+        // *[Symbol.iterator]() {
+        //   for (const model of this._models) {
+        //     yield model;
+        //   }
+        // }
+        // 2번
+        // *[Symbol.iterator]() {
+        //   yield* this._models;
+        // }
+        // 3번
+        [Symbol.iterator]() {
+          return this._models[Symbol.iterator]();
+        }
+      }
+
+      const coll = new Collection();
+      coll.add(new Model({ id: 1, name: "AA" }));
+      coll.add(new Model({ id: 2, name: "Bb" }));
+      coll.add(new Model({ id: 3, name: "CC" }));
+
+      console.log(coll.at(2).get("id"));
+
+      // 아래처럼 할수도있지만 collection자체에서 이터러블을 지원하도록하는게 더 편리하다.
+      _.go(
+        L.range(3),
+        L.map((i) => coll.at(i)),
+        L.map((m) => m.get("name")),
+        _.each(console.log)
+      );
+
+      // class에 iterator를 정의해주면 값을 순회가능함
+      console.log([...coll]);
+      // 그래서 아래처럼 변경가능함
+      _.go(
+        coll,
+        L.map((m) => m.get("name")),
+        _.each(console.log)
+      );
+      console.clear();
+    </script>
+
+    <br /><br />
+    3. Product, Products
+
+    <script>
+      class Product extends Model {}
+      class Products extends Collection {
+        // ⭐️ this가 순회가능하다는것이 포인트
+        totalPrice() {
+          return _.go(
+            this,
+            L.map((p) => p.get("price")),
+            _.reduce(add)
+          );
+        }
+      }
+
+      const products = new Products();
+      console.log(products.totalPrice());
+      products.add(new Product({ id: 1, price: 10000 }));
+      console.log(products.totalPrice());
+      products.add(new Product({ id: 3, price: 25000 }));
+      console.log(products.totalPrice());
+      products.add(new Product({ id: 5, price: 35000 }));
+      console.log(products.totalPrice());
+    </script>
+  </body>
+</html>
