@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>06/1</title>
+    <script src="../fx.js"></script>
+  </head>
+  <body>
+    ## 시간을 이터러블로 다루기
+    <br /><br />
+    1. range와 take의 재해석
+
+    <script>
+      // 가로로 평가됨
+      _.go(_.range(10), _.take(3), _.each(console.log));
+
+      // 길이가 10인 배열이 생성되는게아님 > 각 실행에대해서만 값이 생성됨(실행방식이 순차적이지않고, 세로로 실행된다고 이해하면됨!@)
+      // _.go(
+      //   L.range(10),
+      //   L.map(_.delay(1000)),
+      //   L.filter((a) => a % 2),
+      //   L.take(3),
+      //   _.each(console.log)
+      // );
+      // 시간을 리스트로 관리한다는 개념!! > 시간을 값으로 관리할 수 있땅!
+      // 리액티브 프로그래밍 > 이터러블프로그래밍에서 좀 더 나아간것
+      console.clear();
+    </script>
+
+    <br /><br />
+    2. takeWhile, takeUntil : 동적으로 일어나는일들을 효과적으로 제한하는 함수
+
+    <script>
+      _.go(
+        [1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2],
+        L.takeWhile((a) => a), // false를 반환하면 실행이 종료됨
+        _.each(console.log)
+      );
+
+      _.go(
+        [1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2],
+        L.takeUntil((a) => !a), // truthy값을 만나면 해당 루프만 실행하고, 실행을 종료
+        _.each(console.log)
+      );
+
+      // predicate : 보조함수
+
+      _.go(
+        [0, false, undefined, null, 10, 20, 30],
+        _.takeUntil((a) => a),
+        _.each(console.log)
+      );
+      console.clear();
+    </script>
+
+    <br /><br />
+    3. 할 일들을 이터러블(리스트)로 바라보기
+
+    <script>
+      const track = [
+        { cars: ["철수", "영희", "철희", "영수"] },
+        { cars: ["하든", "커리", "듀란트", "탐슨"] },
+        { cars: ["폴", "어빙", "릴라드", "맥컬럼"] },
+        { cars: ["스파이더맨", "아이언맨"] },
+        { cars: [] },
+      ];
+
+      _.go(
+        L.range(Infinity),
+        L.map((i) => track[i]),
+        L.map(({ cars }) => cars),
+        // L.map(_.delay(2000)),
+        L.takeUntil(({ length }) => length < 4),
+        L.flat,
+        L.map((car) => `${car} 출발!`),
+        _.each(console.log)
+      );
+      // 하윽...잼따ㅋㅋ
+    </script>
+
+    <br /><br />
+    4. 아임포트 결제 누락 스케쥴러 만들기 문제가 발생할수있는 케이스 : 결제누락
+    고객 -아임포트 - 판매자 구조가있는데, <br />
+    아임포트에서 결제가 이뤄지고 판매자는 결제사실을 받지 못하는 상황이 발생할
+    수 있음
+    <script>
+      const Impt = {
+        payments: {
+          1: [
+            { imp_id: 11, order_id: 1, amount: 15000 },
+            { imp_id: 12, order_id: 2, amount: 25000 },
+            { imp_id: 13, order_id: 3, amount: 10000 },
+          ],
+          2: [
+            { imp_id: 14, order_id: 4, amount: 25000 },
+            { imp_id: 15, order_id: 5, amount: 45000 },
+            { imp_id: 16, order_id: 6, amount: 15000 },
+          ],
+          3: [
+            { imp_id: 17, order_id: 7, amount: 20000 },
+            { imp_id: 18, order_id: 8, amount: 30000 },
+          ],
+          4: [],
+          5: [],
+          //...
+        },
+        // 여기서부터 막혔음... 왜 반환값이 안찍히지?
+        getPayments: (page) => {
+          console.log(`http://..?page=${page}`);
+          return _.delay(1000 * 1, Impt.payments[page]);
+        },
+        cancelPayment: (imp_id) => Promise.resolve(`${imp_id}: 취소완료`),
+      };
+
+      const DB = {
+        getOrders: (ids) => _.delay(100, [{ id: 1 }, { id: 3 }, { id: 7 }]),
+      };
+    </script>
+  </body>
+</html>
